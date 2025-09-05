@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机图片显示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin: 30px 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .random-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .random-image.show {
+            opacity: 1;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .refresh-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        .description {
+            color: #666;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .image-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 随机图片</h1>
+        
+        <div id="loadingContainer" class="loading">
+            <div class="spinner"></div>
+            <p>正在加载随机图片...</p>
+        </div>
+        
+        <div class="image-container" id="imageContainer" style="display: none;">
+            <img id="randomImage" class="random-image" alt="随机图片">
+        </div>
+        
+        <button class="refresh-btn" id="refreshBtn" onclick="showRandomImage()" style="display: none;">
+            🔄 显示另一张图片
+        </button>
+        
+        <p class="description">每次刷新或点击按钮都会随机显示一张新图片</p>
+    </div>
+
+    <script>
+        // 图片数组 - 这里使用占位符图片，您可以替换为实际图片
+        const images = [
+            'https://picsum.photos/400/300?random=1',
+            'https://picsum.photos/400/300?random=2', 
+            'https://picsum.photos/400/300?random=3',
+            'https://picsum.photos/400/300?random=4',
+            'https://picsum.photos/400/300?random=5'
+        ];
+
+        // 如果您想使用本地图片，请取消注释下面的代码并注释上面的代码
+        /*
+        const images = [
+            'images/image1.jpg',
+            'images/image2.jpg',
+            'images/image3.jpg',
+            'images/image4.jpg',
+            'images/image5.jpg'
+        ];
+        */
+
+        let currentImageIndex = -1;
+
+        function getRandomImage() {
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * images.length);
+            } while (newIndex === currentImageIndex && images.length > 1);
+            
+            currentImageIndex = newIndex;
+            return images[newIndex];
+        }
+
+        function showRandomImage() {
+            const loadingContainer = document.getElementById('loadingContainer');
+            const imageContainer = document.getElementById('imageContainer');
+            const randomImage = document.getElementById('randomImage');
+            const refreshBtn = document.getElementById('refreshBtn');
+
+            // 显示加载状态
+            loadingContainer.style.display = 'flex';
+            imageContainer.style.display = 'none';
+            refreshBtn.style.display = 'none';
+            randomImage.classList.remove('show');
+
+            // 获取随机图片
+            const imageUrl = getRandomImage();
+            
+            // 预加载图片
+            const img = new Image();
+            img.onload = function() {
+                setTimeout(() => {
+                    randomImage.src = imageUrl;
+                    loadingContainer.style.display = 'none';
+                    imageContainer.style.display = 'block';
+                    refreshBtn.style.display = 'inline-block';
+                    
+                    // 延迟一点显示图片以获得更好的过渡效果
+                    setTimeout(() => {
+                        randomImage.classList.add('show');
+                    }, 50);
+                }, 1000); // 模拟加载时间，让用户看到加载动画
+            };
+            
+            img.onerror = function() {
+                setTimeout(() => {
+                    loadingContainer.style.display = 'none';
+                    imageContainer.style.display = 'block';
+                    refreshBtn.style.display = 'inline-block';
+                    randomImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuWbvueJh+WKoOi9veWksei0pTwvdGV4dD48L3N2Zz4=';
+                    randomImage.classList.add('show');
+                }, 1000);
+            };
+            
+            img.src = imageUrl;
+        }
+
+        // 页面加载完成后自动显示随机图片
+        window.addEventListener('load', function() {
+            setTimeout(showRandomImage, 500);
+        });
+
+        // 添加键盘事件监听
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space' || event.key === 'Enter') {
+                event.preventDefault();
+                showRandomImage();
+            }
+        });
+    </script>
+</body>
+</html>
